@@ -44,17 +44,18 @@ const cardPost = (req, res) => {
 const cardDelete = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then(card => {
-      if (card) {
-        return res.send({
-          data: card
-        })
-      }
-      return res.status(404).send({
-        message: 'Карточка с указанным _id не найдена.'
+      return res.send({
+        data: card
       })
 
     })
     .catch(err => {
+
+      if (err.name === 'CastError') {
+        return res.status(404).send({
+          message: 'Карточка с указанным _id не найдена.'
+        })
+      }
       return res.status(500).send({
         message: 'Произошла ошибка'
       })
@@ -96,12 +97,7 @@ const addCardLike = (req, res) => {
 }
 
 const deleteCardLike = (req, res) => {
-  if (!req.params.cardId) {
-    return res.status(404).send({
-      message: 'Передан несуществующий _id карточки.'
-    })
 
-  }
   return Card.findByIdAndUpdate(req.params.cardId, {
       $pull: {
         likes: req.user._id

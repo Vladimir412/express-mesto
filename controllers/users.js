@@ -73,16 +73,16 @@ const upadteInfoProfile = (req, res) => {
       // upsert: true
     })
     .then(user => {
-      if (user) {
-        return res.send({
-          data: user
-        })
-      }
-      return res.status(404).send({
-        message: 'Пользователь с указанным _id не найден.'
+      return res.send({
+        data: user
       })
     })
     .catch(err => {
+      if (err.name === 'CastError') {
+        return res.status(404).send({
+          message: 'Пользователь с указанным _id не найден.'
+        })
+      }
       if (err.name === 'ValidationError') {
         return res.status(400).send({
           message: 'Переданы некорректные данные при обновлении профиля.'
@@ -106,16 +106,17 @@ const updateAvatarUser = (req, res) => {
       upsert: true
     })
     .then(user => {
-      if (user) {
-        return res.send({
-          data: user
-        })
-      }
-      return res.status(404).send({
-        message: 'Пользователь с указанным _id не найден.'
+      return res.send({
+        data: user
       })
+
     })
     .catch(err => {
+      if (err.name === 'CastError') {
+        return res.status(404).send({
+          message: 'Пользователь с указанным _id не найден.'
+        })
+      }
       if (err.name === 'ValidationError') {
         return res.status(400).send({
           message: 'Переданы некорректные данные при обновлении профиля.'
