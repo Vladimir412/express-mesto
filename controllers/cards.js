@@ -43,7 +43,9 @@ const cardDelete = (req, res) => {
           message: 'Карточка удалена.',
         });
       }
-      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
+      return res.status(404).send({
+        message: 'Карточка с указанным _id не найдена.',
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -70,7 +72,9 @@ const addCardLike = (req, res) => Card.findByIdAndUpdate(req.params.cardId, {
         data: card,
       });
     }
-    return res.status(404).send({ message: 'Передан несуществующий _id карточки.' });
+    return res.status(404).send({
+      message: 'Передан несуществующий _id карточки.',
+    });
   })
   .catch((err) => {
     if (err.name === 'CastError') {

@@ -79,7 +79,9 @@ const upadteInfoProfile = (req, res) => {
           data: user,
         });
       }
-      return res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+      return res.status(404).send({
+        message: 'Пользователь по указанному _id не найден',
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -115,7 +117,9 @@ const updateAvatarUser = (req, res) => {
           data: user,
         });
       }
-      return res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+      return res.status(404).send({
+        message: 'Пользователь по указанному _id не найден',
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
