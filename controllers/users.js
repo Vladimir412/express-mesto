@@ -22,9 +22,16 @@ const getUserById = (req, res) => {
         message: 'Пользователь по указанному _id не найден.',
       });
     })
-    .catch(() => res.status(500).send({
-      message: 'Произошла ошибка',
-    }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({
+          message: 'Переданы некорректные данные _id.',
+        });
+      }
+      return res.status(500).send({
+        message: 'Произошла ошибка',
+      });
+    });
 };
 
 const creatUser = (req, res) => {
@@ -66,13 +73,18 @@ const upadteInfoProfile = (req, res) => {
     runValidators: true,
     // upsert: true
   })
-    .then((user) => res.send({
-      data: user,
-    }))
+    .then((user) => {
+      if (user) {
+        return res.send({
+          data: user,
+        });
+      }
+      return res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({
-          message: 'Пользователь с указанным _id не найден.',
+        return res.status(400).send({
+          message: 'Переданы некорректные данные _id.',
         });
       }
       if (err.name === 'ValidationError') {
@@ -97,13 +109,18 @@ const updateAvatarUser = (req, res) => {
     runValidators: true,
     upsert: true,
   })
-    .then((user) => res.send({
-      data: user,
-    }))
+    .then((user) => {
+      if (user) {
+        return res.send({
+          data: user,
+        });
+      }
+      return res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({
-          message: 'Пользователь с указанным _id не найден.',
+        return res.status(400).send({
+          message: 'Переданы некорректные данные _id.',
         });
       }
       if (err.name === 'ValidationError') {

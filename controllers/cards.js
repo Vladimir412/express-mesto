@@ -35,21 +35,20 @@ const cardPost = (req, res) => {
     });
 };
 
-// Согласно Вашим комментариям при удаление карточки должна быть 400 0шибка
-// хотя в следующем комментарии Вы пишите: "Должна быть проверка на существование,
-// обработка ошибки 404.
-// Данные могут не найтись if(!data) Это должно проверяться везде, где есть поиск по id".
-// И в ТЗ к проектной прописанно что на удаление карточки идет проверка только на 404 ошибку.
-// Если я не прав прошу объяснить поподробней. А то получаются двойные стандарты
 const cardDelete = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send({
-      data: card,
-    }))
+    .then((card) => {
+      if (card) {
+        return res.send({
+          message: 'Карточка удалена.',
+        });
+      }
+      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({
-          message: 'Карточка с указанным _id не найдена.',
+        return res.status(400).send({
+          message: 'Переданы некорректные данные _id.',
         });
       }
       return res.status(500).send({
@@ -65,19 +64,18 @@ const addCardLike = (req, res) => Card.findByIdAndUpdate(req.params.cardId, {
 }, {
   new: true,
 })
-  .then((card) => res.send({
-    data: card,
-  }))
-  .catch((err) => {
-    if (err.name === 'CastError') {
-      return res.status(404).send({
-        message: 'Передан несуществующий _id карточки.',
+  .then((card) => {
+    if (card) {
+      return res.send({
+        data: card,
       });
     }
-
-    if (err.name === 'ValidationError') {
+    return res.status(404).send({ message: 'Передан несуществующий _id карточки.' });
+  })
+  .catch((err) => {
+    if (err.name === 'CastError') {
       return res.status(400).send({
-        message: 'Переданы некорректные данные для постановки лайка.',
+        message: 'Переданы некорректные данные _id.',
       });
     }
     return res.status(500).send({
@@ -92,18 +90,20 @@ const deleteCardLike = (req, res) => Card.findByIdAndUpdate(req.params.cardId, {
 }, {
   new: true,
 })
-  .then((card) => res.send({
-    data: card,
-  }))
-  .catch((err) => {
-    if (err.name === 'CastError') {
-      return res.status(404).send({
-        message: 'Передан несуществующий _id карточки.',
+  .then((card) => {
+    if (card) {
+      return res.send({
+        data: card,
       });
     }
-    if (err.name === 'ValidationError') {
+    return res.status(404).send({
+      message: 'Передан несуществующий _id карточки.',
+    });
+  })
+  .catch((err) => {
+    if (err.name === 'CastError') {
       return res.status(400).send({
-        message: 'Переданы некорректные данные для снятии лайка.',
+        message: 'Переданы некорректные данные _id.',
       });
     }
     return res.status(500).send({
