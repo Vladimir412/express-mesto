@@ -1,12 +1,11 @@
-const router = require('express').Router()
-const User = require('../models/user')
+const router = require('express').Router();
 const {
   getUsers,
   getUserById,
   creatUser,
   upadteInfoProfile,
-  updateAvatarUser
-} = require('../controllers/users')
+  updateAvatarUser,
+} = require('../controllers/users');
 
 const routerGetUsers = router.get('/users', getUsers);
 
@@ -23,5 +22,5 @@ module.exports = {
   routerGetUserById,
   routerPost,
   routerUpadateInfoUser,
-  routerUpdateAvatarUser
+  routerUpdateAvatarUser,
 };

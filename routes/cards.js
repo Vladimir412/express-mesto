@@ -1,10 +1,10 @@
-const router = require('express').Router()
+const router = require('express').Router();
 const {
   cardsGet,
   cardPost,
   cardDelete,
   addCardLike,
-  deleteCardLike
+  deleteCardLike,
 } = require('../controllers/cards');
 
 const routerCardsGet = router.get('/cards', cardsGet);
@@ -22,5 +22,5 @@ module.exports = {
   routerCardPost,
   routerCardDelete,
   routerAddCardLike,
-  routerDeleteCardLike
+  routerDeleteCardLike,
 };
