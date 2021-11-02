@@ -168,7 +168,6 @@ const login = (req, res, next) => {
         errincorrect.statusCode = 401;
         next(errincorrect);
       }
-      console.log(placeForIdUser);
       const token = jwt.sign(
         { _id: placeForIdUser },
         'cool', {
