@@ -1,10 +1,16 @@
+/* eslint-disable max-len */
 const Card = require('../models/card');
+const ErrorUserUndefined = require('../middlewares/errors/ErrorUserUndefined');
+const ErrorNotCorrectData = require('../middlewares/errors/ErrorNotCorrectData');
+const ErrorCantDeleteCardOtherUser = require('../middlewares/errors/ErrorCantDeleteCardOtherUser');
 
 const cardsGet = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send({
-      cards,
-    }))
+    .then((cards) => {
+      res.send({
+        cards,
+      });
+    })
     .catch(next);
 };
 
@@ -23,10 +29,9 @@ const cardPost = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные при создании карточки.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные при создании карточки.'));
       }
+      next(err);
     });
 };
 
@@ -34,15 +39,11 @@ const cardDelete = (req, res, next) => {
   Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        const errNotFound = new Error('Карточка с указанным _id не найдена.');
-        errNotFound.statusCode = 404;
-        next(errNotFound);
+        throw new ErrorUserUndefined('Карточка с указанным _id не найдена.');
       }
 
       if (req.user._id !== card.owner.toString()) {
-        const errCantDelete = new Error('Вы не можете удалять карточки других пользователей!');
-        errCantDelete.statusCode = 403;
-        next(errCantDelete);
+        throw new ErrorCantDeleteCardOtherUser('Вы не можете удалять карточки других пользователей!');
       }
       return Card.findByIdAndRemove(req.params.cardId)
         .then(() => res.send({
@@ -51,11 +52,9 @@ const cardDelete = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
       }
-      next();
+      next(err);
     });
 };
 
@@ -69,9 +68,7 @@ const addCardLike = (req, res, next) => {
   })
     .then((card) => {
       if (!card) {
-        const errCardUndefind = new Error('Передан несуществующий _id карточки.');
-        errCardUndefind.statusCode = 404;
-        next(errCardUndefind);
+        throw new ErrorUserUndefined('Передан несуществующий _id карточки.');
       }
       return res.send({
         data: card,
@@ -79,10 +76,9 @@ const addCardLike = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
       }
+      next(err);
     });
 };
 
@@ -99,16 +95,13 @@ const deleteCardLike = (req, res, next) => Card.findByIdAndUpdate(req.params.car
         data: card,
       });
     }
-    const errCardUndefind = new Error('Передан несуществующий _id карточки.');
-    errCardUndefind.statusCode = 404;
-    return next(errCardUndefind);
+    throw new ErrorUserUndefined('Передан несуществующий _id карточки.');
   })
   .catch((err) => {
     if (err.name === 'CastError') {
-      const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-      errNotCorrectData.statusCode = 400;
-      next(errNotCorrectData);
+      next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
     }
+    next(err);
   });
 
 module.exports = {

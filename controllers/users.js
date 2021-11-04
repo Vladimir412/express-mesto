@@ -1,7 +1,12 @@
+/* eslint-disable max-len */
 /* eslint-disable consistent-return */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const ErrorUserUndefined = require('../middlewares/errors/ErrorUserUndefined');
+const ErrorNotCorrectDataForLogin = require('../middlewares/errors/ErrorNotCorrectDataForLogin');
+const ErrorIsUser = require('../middlewares/errors/ErrorIsUser');
+const ErrorNotCorrectData = require('../middlewares/errors/ErrorNotCorrectData');
 
 const SOLT = 10;
 
@@ -17,9 +22,7 @@ const getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        const err = new Error('Пользователь по указанному _id не найден.');
-        err.statusCode = 404;
-        return next(err);
+        throw new ErrorUserUndefined('Пользователь по указанному _id не найден.');
       }
       return res.send({
         data: user,
@@ -27,9 +30,7 @@ const getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-        errNotCorrectData.statusCode = 400;
-        return next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
       }
       next(err);
     });
@@ -46,12 +47,11 @@ const creatUser = (req, res, next) => {
   User.findOne({ email })
     .then((user) => {
       if (user) {
-        const errIsUser = new Error('Пользователь с таким Email уже зарегестрирован!');
-        errIsUser.statusCode = 409;
-        next(errIsUser);
+        throw new ErrorIsUser('Пользователь с таким Email уже зарегестрирован!');
       }
-    });
-  bcrypt.hash(password, SOLT)
+
+      return bcrypt.hash(password, SOLT);
+    })
     .then((hash) => User.create({
       name,
       about,
@@ -59,14 +59,14 @@ const creatUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send({
-      data: user,
-    }))
+    .then((user) => {
+      res.status(201).send({
+        data: user,
+      });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-        errNotCorrectData.statusCode = 400;
-        return next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
       }
       next(err);
     });
@@ -87,9 +87,7 @@ const upadteInfoProfile = (req, res, next) => {
   })
     .then((user) => {
       if (!user) {
-        const errUndefind = new Error('Пользователь по указанному _id не найден');
-        errUndefind.statusCode = 404;
-        next(errUndefind);
+        throw new ErrorUserUndefined('Пользователь по указанному _id не найден');
       }
       res.send({
         user,
@@ -97,15 +95,12 @@ const upadteInfoProfile = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
       }
       if (err.name === 'ValidationError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные при обновлении профиля.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные при обновлении профиля.'));
       }
+      next(err);
     });
 };
 
@@ -122,9 +117,7 @@ const updateAvatarUser = (req, res, next) => {
   })
     .then((user) => {
       if (!user) {
-        const errUndefind = new Error('Пользователь по указанному _id не найден');
-        errUndefind.statusCode = 404;
-        next(errUndefind);
+        throw new ErrorUserUndefined('Пользователь по указанному _id не найден');
       }
       return res.send({
         data: user,
@@ -132,15 +125,12 @@ const updateAvatarUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
       }
       if (err.name === 'ValidationError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные при обновлении профиля.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные при обновлении профиля.'));
       }
+      next(err);
     });
 };
 
@@ -155,25 +145,21 @@ const login = (req, res, next) => {
   }).select('+password')
     .then((user) => {
       if (!user) {
-        const errincorrect = new Error('Неправильные почта или пароль');
-        errincorrect.statusCode = 401;
-        next(errincorrect);
+        throw new ErrorNotCorrectDataForLogin('Неправильные почта или пароль');
       }
       placeForIdUser = user._id.toString();
       return bcrypt.compare(password, user.password);
     })
     .then((user) => {
       if (!user) {
-        const errincorrect = new Error('Неправильные почта или пароль');
-        errincorrect.statusCode = 401;
-        next(errincorrect);
+        throw new ErrorNotCorrectDataForLogin('Неправильные почта или пароль');
       }
-      const token = jwt.sign(
-        { _id: placeForIdUser },
-        'cool', {
-          expiresIn: '7d',
-        },
-      );
+      const token = jwt.sign({
+        _id: placeForIdUser,
+      },
+      'cool', {
+        expiresIn: '7d',
+      });
       return token;
     })
     .then((token) => {
@@ -188,9 +174,7 @@ const getInfoAboutUser = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        const errUndefind = new Error('Пользователь по указанному _id не найден');
-        errUndefind.statusCode = 404;
-        next(errUndefind);
+        throw new ErrorUserUndefined('Пользователь по указанному _id не найден');
       }
       return res.send({
         user,
@@ -198,11 +182,8 @@ const getInfoAboutUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        const errNotCorrectData = new Error('Переданы некорректные данные _id.');
-        errNotCorrectData.statusCode = 400;
-        next(errNotCorrectData);
+        next(new ErrorNotCorrectData('Переданы некорректные данные _id.'));
       }
-      // eslint-disable-next-line no-undef
       next(err);
     });
 };

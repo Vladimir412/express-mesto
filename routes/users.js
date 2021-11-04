@@ -1,4 +1,6 @@
+/* eslint-disable prefer-const */
 const router = require('express').Router();
+const isUrl = require('validator/lib/isURL');
 const { celebrate, Joi } = require('celebrate');
 const {
   getUsers,
@@ -11,11 +13,20 @@ const {
 } = require('../controllers/users');
 const auth = require('../middlewares/auth');
 
+const validateLink = (link) => {
+  let valid;
+  valid = isUrl(link);
+  if (valid) {
+    return link;
+  }
+  throw new Error('Невалидный Url');
+};
+
 const routerRegister = router.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string(),
     about: Joi.string(),
-    avatar: Joi.string(),
+    avatar: Joi.string().custom(validateLink),
     email: Joi.string().required().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net', 'ru'] } }),
     password: Joi.string().required().min(8),
   }),
@@ -28,7 +39,7 @@ const routerLoginUser = router.post('/signin', celebrate({
   }),
 }), login);
 
-const routerGetUsers = router.get('/users', getUsers);
+const routerGetUsers = router.get('/users', auth, getUsers);
 
 const routerGetInfoAboutUser = router.get('/users/me', auth, celebrate({
   headers: Joi.object().keys({
@@ -36,9 +47,9 @@ const routerGetInfoAboutUser = router.get('/users/me', auth, celebrate({
   }).unknown(true),
 }), getInfoAboutUser);
 
-const routerGetUserById = router.get('/users/:userId', celebrate({
+const routerGetUserById = router.get('/users/:userId', auth, celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().required(),
+    userId: Joi.string().hex().length(24).required(),
   }),
 }), getUserById);
 
@@ -57,7 +68,7 @@ const routerUpdateAvatarUser = router.patch('/users/me/avatar', auth, celebrate(
     authorization: Joi.string().required(),
   }).unknown(true),
   body: Joi.object().keys({
-    avatar: Joi.string().required().min(2),
+    avatar: Joi.string().custom(validateLink).required().min(2),
   }),
 }), updateAvatarUser);
 
