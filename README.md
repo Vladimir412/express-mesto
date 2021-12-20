@@ -2,7 +2,7 @@
 
   * Написанно на express.js
 
-  * Это бэкенд часть для  проекта [Mesto(React.js)](https://react-mesto-auth-sigma.vercel.app/login).
+  * Это бэкенд часть для  проекта [Mesto(React.js)](https://github.com/Vladimir412/react-mesto-auth).
    Реализованно:
 
     * Регистрация нового пользователя и запись его в базу данных
@@ -22,7 +22,7 @@
     
     * Установить [Node.js](https://nodejs.org/en/download/) если он у Вас не установлен
     * Установите [MongoDB](https://www.mongodb.com/try/download/community?jmp=docs) если он у Вас не установлен
-    * После установки выше речисленного, сначала запустите в gitbash базу данных командой:
+    * После установки выше перечисленного, сначала запустите в gitbash базу данных командой:
        `mongod `
       
       А затем само приложение через терминал командой:
